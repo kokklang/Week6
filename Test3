@@ -1,0 +1,346 @@
+<?php
+
+// ================== PHP : เชื่อมต่อ MySQL ==================
+
+$host = "localhost";
+
+$user = "root";
+
+$pass = "";
+
+$db   = "exampledb";
+
+$conn = new mysqli($host, $user, $pass);
+
+$conn->set_charset("utf8");
+
+if ($conn->connect_error) {
+
+    die("เชื่อมต่อฐานข้อมูลไม่สำเร็จ");
+
+}
+
+// ================== สร้างฐานข้อมูล ==================
+
+$conn->query("CREATE DATABASE IF NOT EXISTS $db CHARACTER SET utf8mb4");
+
+$conn->select_db($db);
+
+// ================== สร้างตาราง ==================
+
+$conn->query("
+
+CREATE TABLE IF NOT EXISTS projects (
+
+    id INT AUTO_INCREMENT PRIMARY KEY,
+
+    title VARCHAR(100),
+
+    detail TEXT
+
+)");
+
+$conn->query("
+
+CREATE TABLE IF NOT EXISTS users (
+
+    id INT AUTO_INCREMENT PRIMARY KEY,
+
+    name VARCHAR(100),
+
+    age INT
+
+)");
+
+$conn->query("
+
+CREATE TABLE IF NOT EXISTS people (
+
+    id INT AUTO_INCREMENT PRIMARY KEY,
+
+    name VARCHAR(100),
+
+    age INT,
+
+    gender VARCHAR(20)
+
+)");
+
+// ================== เพิ่มข้อมูลตัวอย่าง (ครั้งแรกเท่านั้น) ==================
+
+$conn->query("INSERT IGNORE INTO projects VALUES
+
+(1,'โครงการ','การพัฒนาระบบสารสนเทศเพื่อการจัดการเอกสารออนไลน์ โดยเน้นการทำงานร่วมกันของผู้ใช้ผ่านเครือข่าย')");
+
+$conn->query("INSERT IGNORE INTO people VALUES
+
+(1,'สมชาย',30,'ชาย'),
+
+(2,'สมหญิง',28,'หญิง'),
+
+(3,'สมปอง',25,'ชาย')");
+
+// ================== บันทึกข้อมูลผู้ใช้จากฟอร์ม ==================
+
+if (isset($_POST['addUser'])) {
+
+    $name = $_POST['name'];
+
+    $age  = $_POST['age'];
+
+    $conn->query("INSERT INTO users (name, age) VALUES ('$name','$age')");
+
+}
+
+// ================== ดึงข้อมูล ==================
+
+$projects = $conn->query("SELECT * FROM projects");
+
+$users    = $conn->query("SELECT * FROM users");
+
+$people   = $conn->query("SELECT * FROM people");
+
+$title = "ระบบตัวอย่าง PHP + JS + HTML + CSS + Database";
+
+$date  = date("d/m/Y");
+
+?>
+
+<!DOCTYPE html>
+
+<html lang="th">
+
+<head>
+
+<meta charset="UTF-8">
+
+<title><?php echo $title; ?></title>
+
+<style>
+
+body {
+
+    font-family: Arial, sans-serif;
+
+    background-color: #f4f6f7;
+
+    text-align: center;
+
+    padding: 30px;
+
+}
+
+h2 {
+
+    color: #1f618d;
+
+}
+
+table {
+
+    border-collapse: collapse;
+
+    margin: 20px auto;
+
+    width: 70%;
+
+    background: white;
+
+}
+
+th, td {
+
+    border: 1px solid #2980b9;
+
+    padding: 10px;
+
+}
+
+th {
+
+    background-color: #2980b9;
+
+    color: white;
+
+}
+
+tr:hover {
+
+    background-color: #d6eaf8;
+
+    cursor: pointer;
+
+}
+
+form {
+
+    margin: 20px;
+
+}
+
+input, button {
+
+    padding: 8px;
+
+    margin: 5px;
+
+}
+
+button {
+
+    background: #2980b9;
+
+    color: white;
+
+    border: none;
+
+    border-radius: 5px;
+
+}
+
+footer {
+
+    margin-top: 30px;
+
+    color: #7f8c8d;
+
+}
+
+</style>
+
+<script>
+
+function showDetail(text) {
+
+    alert(text);
+
+}
+
+function showPerson(name, age, gender) {
+
+    alert("ชื่อ: " + name + "\nอายุ: " + age + "\nเพศ: " + gender);
+
+}
+
+</script>
+
+</head>
+
+<body>
+
+<h2><?php echo $title; ?></h2>
+
+<!-- ================== ตารางโครงการ ================== -->
+
+<h3>ตารางข้อมูลโครงการ</h3>
+
+<table>
+
+<tr>
+
+    <th>หัวข้อ</th>
+
+    <th>รายละเอียด</th>
+
+</tr>
+
+<?php while($p = $projects->fetch_assoc()): ?>
+
+<tr onclick="showDetail('<?php echo addslashes($p['detail']); ?>')">
+
+    <td><?php echo $p['title']; ?></td>
+
+    <td><?php echo $p['detail']; ?></td>
+
+</tr>
+
+<?php endwhile; ?>
+
+</table>
+
+<!-- ================== ฟอร์มเพิ่มผู้ใช้งาน ================== -->
+
+<h3>เพิ่มข้อมูลผู้ใช้งาน</h3>
+
+<form method="post">
+
+    <input type="text" name="name" placeholder="ชื่อ" required>
+
+    <input type="number" name="age" placeholder="อายุ" required>
+
+    <button name="addUser">บันทึกข้อมูล</button>
+
+</form>
+
+<!-- ================== ตารางผู้ใช้งาน ================== -->
+
+<h3>ตารางรายชื่อผู้ใช้งาน</h3>
+
+<table>
+
+<tr>
+
+    <th>ชื่อ</th>
+
+    <th>อายุ</th>
+
+</tr>
+
+<?php while($u = $users->fetch_assoc()): ?>
+
+<tr onclick="showDetail('ชื่อ: <?php echo $u['name']; ?> อายุ: <?php echo $u['age']; ?>')">
+
+    <td><?php echo $u['name']; ?></td>
+
+    <td><?php echo $u['age']; ?></td>
+
+</tr>
+
+<?php endwhile; ?>
+
+</table>
+
+<!-- ================== ตารางข้อมูลส่วนตัว ================== -->
+
+<h3>ตารางข้อมูลส่วนตัว</h3>
+
+<table>
+
+<tr>
+
+    <th rowspan="2">ชื่อ</th>
+
+    <th colspan="2">ข้อมูลส่วนตัว</th>
+
+</tr>
+
+<tr>
+
+    <th>อายุ</th>
+
+    <th>เพศ</th>
+
+</tr>
+
+<?php while($person = $people->fetch_assoc()): ?>
+
+<tr onclick="showPerson('<?php echo $person['name']; ?>','<?php echo $person['age']; ?>','<?php echo $person['gender']; ?>')">
+
+    <td><?php echo $person['name']; ?></td>
+
+    <td><?php echo $person['age']; ?></td>
+
+    <td><?php echo $person['gender']; ?></td>
+
+</tr>
+
+<?php endwhile; ?>
+
+</table>
+
+<footer>📅 วันที่: <?php echo $date; ?></footer>
+
+</body>
+
+</html>
+
